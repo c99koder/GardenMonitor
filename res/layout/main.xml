@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:layout_width="fill_parent"
+    android:layout_height="fill_parent" xmlns:android="http://schemas.android.com/apk/res/android">
+    <SurfaceView android:id="@+id/cameraView" android:layout_centerVertical="true" android:layout_centerHorizontal="true" android:layout_width="fill_parent" android:layout_height="fill_parent"></SurfaceView>
+    <TableLayout android:layout_height="wrap_content" android:id="@+id/controls" android:layout_width="fill_parent" android:padding="10dip" android:layout_alignParentTop="true" android:background="#8000">
+        <TableRow android:layout_height="wrap_content" android:layout_width="match_parent">
+            <TextView android:layout_width="wrap_content" android:text="Temperature:" android:layout_height="wrap_content" android:layout_marginRight="6dip" android:textSize="20dip" android:layout_gravity="right"></TextView>
+            <TextView android:layout_width="wrap_content" android:id="@+id/temperature" android:text="32°F" android:layout_height="wrap_content" android:textColor="#fff" android:textSize="20dip"></TextView>
+        </TableRow>
+        <TableRow android:layout_height="wrap_content" android:layout_width="match_parent">
+            <TextView android:layout_width="wrap_content" android:text="Humidity:" android:layout_height="wrap_content" android:layout_marginRight="6dip" android:textSize="20dip" android:layout_gravity="right"></TextView>
+            <TextView android:layout_width="wrap_content" android:id="@+id/humidity" android:text="50%" android:layout_height="wrap_content" android:textColor="#fff" android:textSize="20dip"></TextView>
+        </TableRow>
+        <TableRow android:layout_height="wrap_content" android:layout_width="match_parent">
+            <TextView android:layout_width="wrap_content" android:text="Water level:" android:layout_height="wrap_content" android:layout_marginRight="6dip" android:textSize="20dip" android:layout_gravity="right"></TextView>
+            <ProgressBar android:layout_height="wrap_content" android:id="@+id/water" android:indeterminate="false" style="@android:style/Widget.ProgressBar.Horizontal" android:layout_width="160dip" android:layout_gravity="center_vertical"></ProgressBar>
+        </TableRow>
+    </TableLayout>
+    <LinearLayout android:layout_height="wrap_content" android:layout_width="match_parent" android:layout_alignParentBottom="true" android:gravity="center" android:padding="10px" android:background="#8000">
+        <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_weight="0.5" android:id="@+id/snapshot" android:text="Take Photo"></Button>
+        <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Close Door" android:id="@+id/close" android:layout_weight="0.5"></Button>
+    </LinearLayout>
+</RelativeLayout>
