@@ -20,6 +20,8 @@ import com.android.future.usb.UsbManager;
 
 import android.app.Activity;
 import android.app.AlarmManager;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -28,7 +30,9 @@ import android.content.IntentFilter;
 import android.hardware.Camera;
 import android.hardware.Camera.Size;
 import android.net.DhcpInfo;
+import android.net.Uri;
 import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -154,6 +158,8 @@ public class GardenMonitorActivity extends Activity implements SurfaceHolder.Cal
 		
 		AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 		am.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), AlarmManager.INTERVAL_HOUR, mTakePhotoIntent);
+		
+		new CheckUpdatesTask().execute((Void)null);
 	}
 
 	@Override
@@ -385,25 +391,27 @@ public class GardenMonitorActivity extends Activity implements SurfaceHolder.Cal
 	
 	public void sendXplBroadcast(String type, String target, String schema, String body) {
 	    try {
-	    	String data = "xpl-stat\n{\nhop=1\nsource=c99org-garden." + mAccessory.getSerial() + "\ntarget="+target+"\n}\n"+schema+"\n{\n"+ body + "\n}\n";
-	    	Log.d(TAG, "outgoing XPL broadcast: " + data);
-	    	
-			WifiManager wifi = (WifiManager)getSystemService(Context.WIFI_SERVICE);
-		    DhcpInfo dhcp = wifi.getDhcpInfo();
-		    // handle null somehow
-	
-		    int broadcast = (dhcp.ipAddress & dhcp.netmask) | ~dhcp.netmask;
-		    byte[] quads = new byte[4];
-		    for (int k = 0; k < 4; k++)
-		      quads[k] = (byte) ((broadcast >> k * 8) & 0xFF);
-			InetAddress broadcastAddress = InetAddress.getByAddress(quads);
-			
-			DatagramSocket socket = new DatagramSocket(3865);
-			socket.setReuseAddress(true);
-			socket.setBroadcast(true);
-			DatagramPacket packet = new DatagramPacket(data.getBytes(), data.length(), broadcastAddress, 3865);
-			socket.send(packet);
-			socket.close();
+	    	if(mAccessory != null) {
+		    	String data = "xpl-stat\n{\nhop=1\nsource=c99org-garden." + mAccessory.getSerial() + "\ntarget="+target+"\n}\n"+schema+"\n{\n"+ body + "\n}\n";
+		    	Log.d(TAG, "outgoing XPL broadcast: " + data);
+		    	
+				WifiManager wifi = (WifiManager)getSystemService(Context.WIFI_SERVICE);
+			    DhcpInfo dhcp = wifi.getDhcpInfo();
+			    // handle null somehow
+		
+			    int broadcast = (dhcp.ipAddress & dhcp.netmask) | ~dhcp.netmask;
+			    byte[] quads = new byte[4];
+			    for (int k = 0; k < 4; k++)
+			      quads[k] = (byte) ((broadcast >> k * 8) & 0xFF);
+				InetAddress broadcastAddress = InetAddress.getByAddress(quads);
+				
+				DatagramSocket socket = new DatagramSocket(3865);
+				socket.setReuseAddress(true);
+				socket.setBroadcast(true);
+				DatagramPacket packet = new DatagramPacket(data.getBytes(), data.length(), broadcastAddress, 3865);
+				socket.send(packet);
+				socket.close();
+	    	}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -668,5 +676,39 @@ public class GardenMonitorActivity extends Activity implements SurfaceHolder.Cal
 	public void surfaceDestroyed(SurfaceHolder holder) {
 		camera.stopPreview();
 		camera.release();
+	}
+	
+	private class CheckUpdatesTask extends AsyncTask<Void, Void, Boolean> {
+		private String mUpdateURL = "";
+
+		@Override
+		public Boolean doInBackground(Void... params) {
+			boolean success = false;
+
+			try {
+				URL url = new URL("http://192.168.11.2/~sam/garden/updates/" + getPackageManager().getPackageInfo("org.c99.GardenMonitor", 0).versionName + ".txt");
+				mUpdateURL = UrlUtil.doGet(url);
+				if (mUpdateURL.startsWith("market://") || mUpdateURL.startsWith("http://")) {
+					success = true;
+					Log.i("GardenMonitor", "Update URL: " + mUpdateURL);
+				}
+			} catch (Exception e) {
+				// No updates available! Yay!
+			}
+			return success;
+		}
+
+		@Override
+		public void onPostExecute(Boolean result) {
+			if (result) {
+				NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+				Notification notification = new Notification(R.drawable.icon, "New Version Available", System.currentTimeMillis());
+				PendingIntent contentIntent = PendingIntent.getActivity(GardenMonitorActivity.this, 0, new Intent(Intent.ACTION_VIEW, Uri.parse(mUpdateURL)), 0);
+				notification
+						.setLatestEventInfo(GardenMonitorActivity.this, "New Version Available", "Tap here to update", contentIntent);
+
+				nm.notify(12345, notification);
+			}
+		}
 	}
 }
