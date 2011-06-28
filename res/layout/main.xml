@@ -18,6 +18,6 @@
     </TableLayout>
     <LinearLayout android:layout_height="wrap_content" android:layout_width="match_parent" android:layout_alignParentBottom="true" android:gravity="center" android:padding="10px" android:background="#8000">
         <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_weight="0.5" android:id="@+id/snapshot" android:text="Take Photo"></Button>
-        <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Close Door" android:id="@+id/close" android:layout_weight="0.5"></Button>
+        <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/close" android:layout_weight="0.5" android:text="Toggle Door"></Button>
     </LinearLayout>
 </RelativeLayout>

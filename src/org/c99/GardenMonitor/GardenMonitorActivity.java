@@ -79,6 +79,7 @@ public class GardenMonitorActivity extends Activity implements SurfaceHolder.Cal
 	int mWaterLevelMax = 900;
 	String mLastImageFilename;
 	private boolean mDoorOpenDueToLowWater = false;
+	private boolean mDoorOpen = false;
 	
 	PendingIntent mTakePhotoIntent;
 	
@@ -245,7 +246,10 @@ public class GardenMonitorActivity extends Activity implements SurfaceHolder.Cal
 		Button closeButton = (Button)findViewById(R.id.close);
 		closeButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View arg0) {
-				mHandler.post(mCloseDoorTask);
+				if(mDoorOpen)
+					mHandler.post(mCloseDoorTask);
+				else
+					mHandler.post(mOpenDoorTask);
 			}
 		});
 		
@@ -489,6 +493,7 @@ public class GardenMonitorActivity extends Activity implements SurfaceHolder.Cal
 		   public void run() {
 			   mHandler.removeCallbacks(mOpenDoorTask);
 			   sendCommand(COMMAND_OPEN_DOOR,(byte)0,0);
+			   mDoorOpen = true;
 		   }
 	};
 
@@ -496,6 +501,7 @@ public class GardenMonitorActivity extends Activity implements SurfaceHolder.Cal
 		   public void run() {
 			   mHandler.removeCallbacks(mCloseDoorTask);
 			   sendCommand(COMMAND_CLOSE_DOOR,(byte)0,0);
+			   mDoorOpen = false;
 		   }
 	};
 	

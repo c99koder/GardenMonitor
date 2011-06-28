@@ -24,6 +24,6 @@
     </TableLayout>
     <LinearLayout android:layout_height="wrap_content" android:layout_alignParentBottom="true" android:gravity="center" android:padding="10px" android:layout_alignParentRight="true" android:layout_width="150dip" android:orientation="vertical">
         <Button android:text="Take Photo" android:layout_width="fill_parent" android:id="@+id/snapshot" android:layout_height="wrap_content"></Button>
-        <Button android:layout_height="wrap_content" android:text="Close Door" android:id="@+id/close" android:layout_width="fill_parent"></Button>
+        <Button android:layout_height="wrap_content" android:id="@+id/close" android:layout_width="fill_parent" android:text="Toggle Door"></Button>
     </LinearLayout>
 </RelativeLayout>
