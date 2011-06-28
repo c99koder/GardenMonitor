@@ -90,11 +90,7 @@ int water_level() {
   }
   val /= 100;
   
-  if(val < 650)
-    val = 650;
-  if(val > 750)
-    val = 750;
-  return val - 650;
+  return val;
 }
 
 void loop() {

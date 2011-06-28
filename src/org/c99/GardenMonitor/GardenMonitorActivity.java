@@ -27,6 +27,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.hardware.Camera;
 import android.hardware.Camera.Size;
 import android.net.DhcpInfo;
@@ -40,6 +41,8 @@ import android.os.Message;
 import android.os.ParcelFileDescriptor;
 import android.os.PowerManager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -72,6 +75,8 @@ public class GardenMonitorActivity extends Activity implements SurfaceHolder.Cal
 	int mLastTemp = 0;
 	int mLastHumid = 0;
 	int mLastWaterLevel = 0;
+	int mWaterLevelMin = 800;
+	int mWaterLevelMax = 900;
 	String mLastImageFilename;
 	private boolean mDoorOpenDueToLowWater = false;
 	
@@ -85,6 +90,7 @@ public class GardenMonitorActivity extends Activity implements SurfaceHolder.Cal
 	private static final int MESSAGE_WATERLEVEL = 3;
 	private static final byte COMMAND_OPEN_DOOR = 0x01;
 	private static final byte COMMAND_CLOSE_DOOR = 0x02;
+	private static final String PREFS = "prefs";
 
 	protected class TelemetryPacket {
 		private int value;
@@ -130,6 +136,9 @@ public class GardenMonitorActivity extends Activity implements SurfaceHolder.Cal
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+		mWaterLevelMin = getSharedPreferences(PREFS, 0).getInt("minwater", 800);
+		mWaterLevelMax = getSharedPreferences(PREFS, 0).getInt("maxwater", 900);
+		
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		
@@ -355,14 +364,26 @@ public class GardenMonitorActivity extends Activity implements SurfaceHolder.Cal
 				}
 				break;
 			case MESSAGE_WATERLEVEL:
-				mWaterLevelView.setProgress(p.value);
+				int level = p.value;
+				if(level > mWaterLevelMax) {
+					mWaterLevelMin += (level - mWaterLevelMax);
+					mWaterLevelMax = level;
+					SharedPreferences.Editor editor = getSharedPreferences(PREFS, 0).edit();
+					editor.putInt("minwater",mWaterLevelMin);
+					editor.putInt("maxwater",mWaterLevelMax);
+					editor.commit();
+				}
+				
+				level = (int)(((float)(level - mWaterLevelMin)) / ((float)(mWaterLevelMax - mWaterLevelMin)) * 100.0f);
+				
+				mWaterLevelView.setProgress(level);
 				if(mLastWaterLevel != p.value) {
-					sendXplBroadcast("xpl-trig", "*", "sensor.basic", "device=force1\ntype=waterlevel\ncurrent=" + p.value + "\nunits=%");
+					sendXplBroadcast("xpl-trig", "*", "sensor.basic", "device=force1\ntype=waterlevel\ncurrent=" + level + "\nunits=%");
 					mLastWaterLevel = p.value;
-					if(p.value <= 40 && p.value > 1 && !mDoorOpenDueToLowWater) {
+					if(level <= 40 && level > 1 && !mDoorOpenDueToLowWater) {
 						mDoorOpenDueToLowWater = true;
 						mHandler.post(mOpenDoorTask);
-					} else if(mDoorOpenDueToLowWater && p.value == 100) {
+					} else if(mDoorOpenDueToLowWater && level == 100) {
 						mDoorOpenDueToLowWater = false;
 						mHandler.postDelayed(mCloseDoorTask, 10000);
 					}
@@ -677,6 +698,31 @@ public class GardenMonitorActivity extends Activity implements SurfaceHolder.Cal
 		camera.stopPreview();
 		camera.release();
 	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		menu.add(Menu.NONE, 0, Menu.NONE, "Calibrate Empty");
+		menu.add(Menu.NONE, 1, Menu.NONE, "Calibrate Full");
+		return super.onCreateOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		SharedPreferences.Editor editor = getSharedPreferences(PREFS, 0).edit();
+		switch (item.getItemId()) {
+		case 0:
+			editor.putInt("minwater",mLastWaterLevel);
+			mWaterLevelMin = mLastWaterLevel - 5;
+			break;
+		case 1:
+			editor.putInt("maxwater",mLastWaterLevel);
+			mWaterLevelMax = mLastWaterLevel + 5;
+			break;
+		}
+		editor.commit();
+		return false;
+	}
+
 	
 	private class CheckUpdatesTask extends AsyncTask<Void, Void, Boolean> {
 		private String mUpdateURL = "";
