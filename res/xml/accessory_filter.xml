@@ -14,5 +14,5 @@
      limitations under the License.
 -->
 <resources>
-    <usb-accessory manufacturer="Sam Steele" model="GardenMonitor" version="1.0" />
+    <usb-accessory manufacturer="Sam Steele" model="GardenMonitor" version="1.1" />
 </resources>

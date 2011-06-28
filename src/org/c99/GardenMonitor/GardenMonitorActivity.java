@@ -384,7 +384,7 @@ public class GardenMonitorActivity extends Activity implements SurfaceHolder.Cal
 				if(mLastWaterLevel != p.value) {
 					sendXplBroadcast("xpl-trig", "*", "sensor.basic", "device=force1\ntype=waterlevel\ncurrent=" + level + "\nunits=%");
 					mLastWaterLevel = p.value;
-					if(level <= 40 && level > 1 && !mDoorOpenDueToLowWater) {
+					if(level <= 10 && level > 1 && !mDoorOpenDueToLowWater) {
 						mDoorOpenDueToLowWater = true;
 						mHandler.post(mOpenDoorTask);
 					} else if(mDoorOpenDueToLowWater && level == 100) {

@@ -13,7 +13,7 @@ boolean doorClosed;
 AndroidAccessory acc("Sam Steele",
 		     "GardenMonitor",
 		     "GardenMonitor Arduino Board",
-		     "1.0",
+		     "1.1",
 		     "http://www.c99.org",
 		     "0001");
 
